@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import os
 from fake_useragent import UserAgent
@@ -27,3 +28,5 @@ def headers():
 
     }
     return headers
+
+today_date = datetime.datetime.today().strftime('%d_%m_%Y')
