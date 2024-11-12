@@ -87,6 +87,7 @@ class DataSpider(scrapy.Spider):
                     images_list.append(image)
 
         images = images_list[0]
+        print(images)
         images_count = len(images_list)
 
         breadcrumbs_list = response.xpath('//div[@id="breadCrumbWrapper"]//a/@label').getall()
@@ -213,12 +214,28 @@ class DataSpider(scrapy.Spider):
         yield item
 
     def final_parse_soldout(self, response, **kwargs):
+
         category_lvl1 = kwargs['category_lvl1']
         category_lvl2 = kwargs['category_lvl2']
         brand = kwargs['brand']
         product_id = kwargs['product_id']
         title = kwargs['title']
         images = kwargs['images']
+        if '.sdlcdn.' not in images:
+            if 'https://n3.sdlcdn.com' not in images and '/imgs/' in images:
+                images = 'https://n3.sdlcdn.com' + images
+            elif 'https://n3.sdlcdn.com' not in images and 'imgs/' in images:
+                images = 'https://n3.sdlcdn.com/' + images
+            elif 'https://n3.sdlcdn.com' not in images and '/imgs' not in images:
+                images = 'https://n3.sdlcdn.com/imgs' + images
+
+
+
+        img_w,img_h = get_image_dimensions(images)
+        image_dimension = f'{img_w}x{img_h}'
+
+
+
         images_count = kwargs['images_count']
         mrp_snapdeal = kwargs['mrp_snapdeal']
         stock = 'False'
@@ -239,7 +256,7 @@ class DataSpider(scrapy.Spider):
         item['product_title_sd'] = title
         item['image_url_sd'] = images
         item['count_of_images_sd'] = images_count
-        item['pixel_size_of_the_main_image_sd'] = ''
+        item['pixel_size_of_the_main_image_sd'] = image_dimension
         item['discount_percent_sd'] = 'N/A'
         item['mrp_sd'] = mrp_snapdeal
         item['display_price_on_pdp_price_after_discount_sd'] = 'N/A'
@@ -259,21 +276,29 @@ class DataSpider(scrapy.Spider):
 
 
 if __name__ == '__main__':
-    try:
-        zipcode = sys.argv[1]
-        start = sys.argv[2]
-        end = sys.argv[3]
+    # try:
+    #     zipcode = sys.argv[1]
+    #     start = sys.argv[2]
+    #     end = sys.argv[3]
+    #     ex(f"scrapy crawl data -a zipcode={zipcode} -a start={start} -a end={end}".split())
+    # except:
+    #     # zipcode = 560001 #Banglore
+    #     # zipcode = 400001 #Mumbai
+    #     # zipcode = 110001 #Delhi
+    #     # zipcode = 700020 #Kolkata
+    #
+    #     start = 0
+    #     end = 100
+    #
+    #     # for zipcode in [560001, 400001, 110001, 700020]:
+    #     for zipcode in [560001]:
+    #         ex(f"scrapy crawl data -a zipcode={zipcode} -a start={start} -a end={end}".split())
+
+    start = 0
+    end = 100
+
+    # for zipcode in [560001, 400001, 110001, 700020]:
+    for zipcode in [560001]:
         ex(f"scrapy crawl data -a zipcode={zipcode} -a start={start} -a end={end}".split())
-    except:
-        # zipcode = 560001 #Banglore
-        # zipcode = 400001 #Mumbai
-        # zipcode = 110001 #Delhi
-        # zipcode = 700020 #Kolkata
-
-        start = 0
-        end = 100
-
-        for zipcode in [560001, 400001, 110001, 700020]:
-            ex(f"scrapy crawl data -a zipcode={zipcode} -a start={start} -a end={end}".split())
 
 
