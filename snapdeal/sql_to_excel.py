@@ -8,8 +8,8 @@ qr = f'SELECT * FROM {obj.data_table}'
 obj.cur.execute(qr)
 results = obj.cur.fetchall()
 df = pd.read_sql(qr, obj.con)
-df.pop('pagesave_main')
-df.pop('pagesave_delivery')
+# df.pop('pagesave_main')
+# df.pop('pagesave_delivery')
 date_today = datetime.datetime.today()
 date_today_strf = date_today.strftime("%d_%m_%Y")
 

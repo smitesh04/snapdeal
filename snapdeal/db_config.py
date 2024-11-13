@@ -15,7 +15,7 @@ class DbConfig():
                               database= self.database)
         self.cur = self.con.cursor(pymysql.cursors.DictCursor)
         self.data_table = f'sd_data_{dd_mm_YYYY}'
-        self.pl_table = 'pl'
+        self.pl_table = 'pl_13_11_2024'
 
     def check_table_exists(self, table_name):
         query = f"SHOW TABLES LIKE '{table_name}';"
