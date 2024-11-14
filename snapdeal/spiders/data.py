@@ -64,6 +64,19 @@ class DataSpider(scrapy.Spider):
         product_id = product_id_raw.replace('pogId=`', '').replace('`', '').replace(',', '')
         title = response.xpath('//h1[@itemprop="name"]/@title').get()
 
+        seller_ratings = response.xpath("//div[contains(@class,'sellerInformationInnerContainer')]//span[contains(@class,'overallratingdiv')]/text()").get()
+        if not seller_ratings:
+            seller_ratings = 0
+        else:
+            seller_ratings = seller_ratings.replace('(', '').replace(')', '')
+        seller_display_name = response.xpath("//div[contains(@class,'sellerNameContainer')]//span/text()").get()
+        if not seller_display_name:
+            seller_display_name = 'N/A'
+        seller_id_raw = response.xpath("//div[contains(@class,'sellerNameContainer')]//a/@href").get()
+        seller_id = seller_id_raw.split('/')[-1]
+
+
+
         images_list = list()
         try:
             images_raw = re.findall('prodattrlistTB hidden.*?]', response.text)[0]
@@ -87,6 +100,10 @@ class DataSpider(scrapy.Spider):
                     images_list.append(image)
 
         images = images_list[0]
+        if ',' in images:
+            images_list = images.split(',')
+            images = images_list[0]
+            images = images.strip()
         print(images)
         images_count = len(images_list)
 
@@ -110,6 +127,9 @@ class DataSpider(scrapy.Spider):
         kwargs['images_count'] = images_count
         kwargs['product_rating'] = product_rating
         kwargs['product_rating_count'] = product_rating_count
+        kwargs['seller_id'] = seller_id
+        kwargs['seller_display_name'] = seller_display_name
+        kwargs['seller_ratings'] = seller_ratings
 
         url = "https://www.snapdeal.com/acors/web/getServicablity/v2/1"
         payload = json.dumps([
@@ -133,6 +153,8 @@ class DataSpider(scrapy.Spider):
             mrp_snapdeal = response.xpath('//span[@itemprop="price"]/text()').get()
             if not mrp_snapdeal:
                 mrp_snapdeal = 'N/A'
+            else:
+                mrp_snapdeal = mrp_snapdeal.replace(',', '')
             kwargs['mrp_snapdeal'] = mrp_snapdeal
             yield scrapy.Request(url='file:///'+filename, callback=self.final_parse_soldout, cb_kwargs=kwargs, dont_filter=True)
         else:
@@ -153,6 +175,9 @@ class DataSpider(scrapy.Spider):
         images_count = kwargs['images_count']
         product_rating = kwargs['product_rating']
         product_rating_count = kwargs['product_rating_count']
+        seller_ratings = kwargs['seller_ratings']
+        seller_id = kwargs['seller_id']
+        seller_display_name = kwargs['seller_display_name']
 
         if not os.path.exists(file_name_delivery):
             page_write(pagesave_dir_delivery, file_name_delivery, response.text)
@@ -177,9 +202,16 @@ class DataSpider(scrapy.Spider):
             delivery_charges = 'N/A'
             snapdeal_display_price_incl_shipping = 'N/A'
 
-        seller_ratings = jsn[supc]['vendors'][0]['rating']
-        seller_id = jsn[supc]['vendors'][0]['vendorCode']
-        seller_display_name = jsn[supc]['vendors'][0]['vendorDisplayName']
+        # seller_ratings = jsn[supc]['vendors'][0]['rating']
+        # seller_id = jsn[supc]['vendors'][0]['vendorCode']
+        # seller_display_name = jsn[supc]['vendors'][0]['vendorDisplayName']
+        if '.sdlcdn.' not in images:
+            if 'https://n3.sdlcdn.com' not in images and '/imgs/' in images:
+                images = 'https://n3.sdlcdn.com' + images
+            elif 'https://n3.sdlcdn.com' not in images and 'imgs/' in images:
+                images = 'https://n3.sdlcdn.com/' + images
+            elif 'https://n3.sdlcdn.com' not in images and '/imgs' not in images:
+                images = 'https://n3.sdlcdn.com/imgs' + images
 
         item = SnapdealItem()
         item['seller_id'] = seller_id
@@ -220,6 +252,11 @@ class DataSpider(scrapy.Spider):
         product_id = kwargs['product_id']
         title = kwargs['title']
         images = kwargs['images']
+        seller_ratings = kwargs['seller_ratings']
+        seller_id = kwargs['seller_id']
+        seller_display_name = kwargs['seller_display_name']
+
+
         if '.sdlcdn.' not in images:
             if 'https://n3.sdlcdn.com' not in images and '/imgs/' in images:
                 images = 'https://n3.sdlcdn.com' + images
@@ -238,7 +275,7 @@ class DataSpider(scrapy.Spider):
         product_rating_count = kwargs['product_rating_count']
 
         item = SnapdealItem()
-        item['seller_id'] = 'N/A'
+        item['seller_id'] = seller_id
         item['category_by_sd_l1'] = category_lvl1
         item['category_by_sd_l2'] = category_lvl2
         item['sd_brand'] = brand
@@ -247,7 +284,7 @@ class DataSpider(scrapy.Spider):
         item['pincode'] = self.zipcode
         item['city'] = self.city
         item['sku_id_sd'] = product_id
-        item['seller_display_name_sd'] = 'N/A'
+        item['seller_display_name_sd'] = seller_display_name
         item['product_title_sd'] = title
         item['image_url_sd'] = images
         item['count_of_images_sd'] = images_count
@@ -263,7 +300,7 @@ class DataSpider(scrapy.Spider):
         if not product_rating_count:
             product_rating_count = 'N/A'
         item['volume_of_product_rating_sd'] = product_rating_count
-        item['seller_rating_sd'] = 'N/A'
+        item['seller_rating_sd'] = seller_ratings
         item['delivery_date_sd'] = 'N/A'
         item['scrape_date'] = datetime.datetime.today()
 
@@ -294,10 +331,10 @@ if __name__ == '__main__':
 
     # for zipcode in [560001, 400001, 110001, 700020]:
     # for zipcode in [560001]:
-    # zipcode = 560001
+    zipcode = 560001
     # zipcode = 400001
     # zipcode = 110001
-    zipcode = 700020
+    # zipcode = 700020
     ex(f"scrapy crawl data -a zipcode={zipcode} -a start={start} -a end={end}".split())
 
 
