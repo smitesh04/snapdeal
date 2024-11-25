@@ -73,7 +73,10 @@ class DataSpider(scrapy.Spider):
         if not seller_display_name:
             seller_display_name = 'N/A'
         seller_id_raw = response.xpath("//div[contains(@class,'sellerNameContainer')]//a/@href").get()
-        seller_id = seller_id_raw.split('/')[-1]
+        if seller_id_raw:
+            seller_id = seller_id_raw.split('/')[-1]
+        else:
+            seller_id = 'N/A'
 
 
 
