@@ -33,13 +33,14 @@ class DataSpider(scrapy.Spider):
             self.city = 'Kolkata'
     def start_requests(self):
 
-        qr = f"select * from {obj.pl_table} where status_{self.zipcode}='0' limit {self.start}, {self.end}"
+        qr = f"select * from {obj.pl_table} where status_{self.zipcode}='pending' limit {self.start}, {self.end}"
+        # qr = f"select * from {obj.pl_table} where sd_url like '%637659097257%' limit {self.start}, {self.end}"
         # qr = f"select * from {obj.pl_table} where id=7 limit {self.start}, {self.end}"
         # qr = f"select * from {obj.pl_table} where url='https://www.snapdeal.com/product/jmall-corded-blender-blue-electric/657855377901' limit {self.start}, {self.end}"
         obj.cur.execute(qr)
         rows = obj.cur.fetchall()
         for row in rows:
-            link = row['URL']
+            link = row['sd_url']
             hashid = create_md5_hash(link)
             pagesave_dir = rf"C:/Users/Actowiz/Desktop/pagesave/{obj.database}/{today_date}/{self.zipcode}"
             file_name = fr"{pagesave_dir}/{hashid}.html"
@@ -145,7 +146,7 @@ class DataSpider(scrapy.Spider):
                 "make2Order": False
             }
         ])
-        hashid_delivery = create_md5_hash(str(kwargs['URL'])+str(self.zipcode))
+        hashid_delivery = create_md5_hash(str(kwargs['sd_url'])+str(self.zipcode))
         pagesave_dir_delivery = rf"C:/Users/Actowiz/Desktop/pagesave/{obj.database}/{today_date}/{self.zipcode}"
         file_name_delivery = fr"{pagesave_dir_delivery}/{hashid_delivery}.json"
         kwargs['hashid_delivery'] = hashid_delivery
@@ -222,7 +223,7 @@ class DataSpider(scrapy.Spider):
         item['category_by_sd_l2'] = category_lvl2
         item['sd_brand'] = brand
         item['sd_display_price_incl_shipping'] = snapdeal_display_price_incl_shipping
-        item['product_url_sd'] = kwargs['URL']
+        item['product_url_sd'] = kwargs['sd_url']
         item['pincode'] = self.zipcode
         item['city'] = self.city
         item['sku_id_sd'] = product_id
@@ -244,7 +245,7 @@ class DataSpider(scrapy.Spider):
         item['volume_of_product_rating_sd'] = product_rating_count
         item['seller_rating_sd'] = seller_ratings
         item['delivery_date_sd'] = delivery_date
-        item['scrape_date'] = datetime.datetime.today()
+        item['scraped_date'] = datetime.datetime.today()
         yield item
 
     def final_parse_soldout(self, response, **kwargs):
@@ -283,7 +284,7 @@ class DataSpider(scrapy.Spider):
         item['category_by_sd_l2'] = category_lvl2
         item['sd_brand'] = brand
         item['sd_display_price_incl_shipping'] = 'N/A'
-        item['product_url_sd'] = kwargs['URL']
+        item['product_url_sd'] = kwargs['sd_url']
         item['pincode'] = self.zipcode
         item['city'] = self.city
         item['sku_id_sd'] = product_id
@@ -305,7 +306,7 @@ class DataSpider(scrapy.Spider):
         item['volume_of_product_rating_sd'] = product_rating_count
         item['seller_rating_sd'] = seller_ratings
         item['delivery_date_sd'] = 'N/A'
-        item['scrape_date'] = datetime.datetime.today()
+        item['scraped_date'] = datetime.datetime.today()
 
         yield item
 

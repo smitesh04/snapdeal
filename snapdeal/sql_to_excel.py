@@ -13,7 +13,8 @@ df = pd.read_sql(qr, obj.con)
 date_today = datetime.datetime.today()
 date_today_strf = date_today.strftime("%d_%m_%Y")
 
-output_file = f'{obj.database}_{date_today_strf}.xlsx'
+# output_file = f'{obj.data_table}_{date_today_strf}.xlsx'
+output_file = f'{obj.data_table}.xlsx'
 
 # Create a pandas Excel writer object using XlsxWriter as the engine
 with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:

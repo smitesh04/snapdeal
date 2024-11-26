@@ -3,19 +3,24 @@ import datetime
 import pymysql
 
 dd_mm_YYYY = datetime.datetime.today().strftime('%d_%m_%Y')
+YYYYmmdd = datetime.datetime.today().strftime('%Y%m%d')
 
 
 class DbConfig():
 
     def __init__(self):
-        self.database = 'snapdeal'
-        self.con = pymysql.Connect(host='localhost',
+        self.database = 'sd_meesho_master'
+        # self.database = 'snapdeal'
+        self.con = pymysql.Connect(host='172.27.131.60',
+        # self.con = pymysql.Connect(host='localhost',
                               user='root',
                               password='actowiz',
                               database= self.database)
         self.cur = self.con.cursor(pymysql.cursors.DictCursor)
-        self.data_table = f'sd_data_{dd_mm_YYYY}'
-        self.pl_table = 'pl_25_11_2024'
+        self.data_table = f'sd_data_{YYYYmmdd}'
+        # self.data_table = f'sd_data_{YYYYmmdd}_2'
+        self.pl_table = f'sd_product_links_{YYYYmmdd}'
+        # self.pl_table = f'sd_product_links_{YYYYmmdd}_2'
 
     def check_table_exists(self, table_name):
         query = f"SHOW TABLES LIKE '{table_name}';"
@@ -50,7 +55,8 @@ class DbConfig():
                   `volume_of_product_rating_SD` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
                   `seller_rating_SD` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
                   `delivery_date_SD` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-                  `scrape_date` varchar(255) DEFAULT NULL,
+                  `scraped_date` varchar(255) DEFAULT NULL,
+                  `No_Delivery_Days_from_Scrape_Date_SD` varchar(255) DEFAULT NULL,
                    PRIMARY KEY (`id`)
                 )
                 '''
@@ -79,7 +85,7 @@ class DbConfig():
 
     def update_pl_status(self, link, zipcode):
         try:
-            self.cur.execute(f"update {self.pl_table} set status_{zipcode}='1' where url='{link}'")
+            self.cur.execute(f"update {self.pl_table} set status_{zipcode}='done' where sd_url='{link}'")
             self.con.commit()
         except Exception as e:print(e)
 
